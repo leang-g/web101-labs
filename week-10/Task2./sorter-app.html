@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Array Sorter</title>
+    <style>
+        /* --- CSS Styling --- */
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --card-bg-color: #ffffff;
+            --text-color: #333;
+            --body-bg-color: #f4f7f9;
+            --border-color: #dee2e6;
+            --error-color: #dc3545;
+            --success-color: #28a745;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--body-bg-color);
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        /* The main container card */
+        .sorter-card {
+            background-color: var(--card-bg-color);
+            padding: 2rem 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            color: var(--text-color);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        #arrayInput {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        #sortBtn {
+            width: 100%;
+            padding: 0.85rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        #sortBtn:hover {
+            background-color: var(--primary-hover-color);
+        }
+
+        #sortBtn:active {
+            transform: scale(0.98);
+        }
+
+        /* Area to display the results */
+        .results-area {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            text-align: left;
+            min-height: 4em;
+            font-size: 1.1rem;
+            word-wrap: break-word;
+            line-height: 1.6;
+            display: none; /* Hidden by default */
+        }
+
+        .results-area.show {
+            display: block;
+        }
+
+        .results-area.error {
+            display: block;
+            color: var(--error-color);
+            background-color: #fbeae9;
+            border-color: var(--error-color);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .results-area p {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sorter-card">
+        <h1>Custom Array Sorter</h1>
+        <div class="input-group">
+            <input type="text" id="arrayInput" placeholder="Enter comma-separated numbers" value="3, 8, 7, 6, 5, -4, 3, 2, 1">
+            <button id="sortBtn">Sort Array</button>
+        </div>
+        <div id="results" class="results-area">
+            <p><strong>Original:</strong> <span id="originalArray"></span></p>
+            <p><strong>Sorted:</strong> <span id="sortedArray"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const arrayInput = document.getElementById('arrayInput');
+            const sortBtn = document.getElementById('sortBtn');
+            const resultsArea = document.getElementById('results');
+            const originalArraySpan = document.getElementById('originalArray');
+            const sortedArraySpan = document.getElementById('sortedArray');
+
+            /**
+             * Sorts an array of numbers using the Bubble Sort algorithm.
+             * This is an in-place sort, but we return a new array for clarity.
+             * @param {number[]} arr - The array of numbers to sort.
+             * @returns {number[]} The sorted array.
+             */
+            function bubbleSort(arr) {
+                const n = arr.length;
+                let swapped;
+                do {
+                    swapped = false;
+                    for (let i = 0; i < n - 1; i++) {
+                        if (arr[i] > arr[i + 1]) {
+                            // Swap the elements
+                            [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+                            swapped = true;
+                        }
+                    }
+                } while (swapped);
+                return arr;
+            }
+
+            function handleSort() {
+                // Reset UI state
+                resultsArea.classList.remove('show', 'error');
+                resultsArea.textContent = ''; // Clear previous error messages
+
+                const inputValue = arrayInput.value.trim();
+
+                // 1. Validate for empty input
+                if (inputValue === '') {
+                    resultsArea.classList.add('error');
+                    resultsArea.textContent = 'Error: Input cannot be empty.';
+                    return;
+                }
+
+                // 2. Parse and validate input string
+                const stringArray = inputValue.split(',');
+                const numberArray = [];
+                for (const item of stringArray) {
+                    const trimmedItem = item.trim();
+                    if (trimmedItem === '' || isNaN(trimmedItem)) {
+                        resultsArea.classList.add('error');
+                        resultsArea.textContent = `Error: Invalid input. "${item}" is not a valid number.`;
+                        return;
+                    }
+                    numberArray.push(Number(trimmedItem));
+                }
+
+                // 3. Perform sort and display results
+                const originalArrayCopy = [...numberArray]; // Keep a copy of the original
+                const sortedArray = bubbleSort(numberArray); // Sorts in-place, but we use the return value
+
+                // Re-create the content structure for valid results
+                resultsArea.innerHTML = `<p><strong>Original:</strong> <span id="originalArray"></span></p>
+                                         <p><strong>Sorted:</strong> <span id="sortedArray"></span></p>`;
+                
+                // We need to get the new spans after resetting innerHTML
+                document.getElementById('originalArray').textContent = originalArrayCopy.join(', ');
+                document.getElementById('sortedArray').textContent = sortedArray.join(', ');
+                resultsArea.classList.add('show');
+            }
+
+            sortBtn.addEventListener('click', handleSort);
+
+            // Bonus: Allow 'Enter' key in the input field to trigger the sort
+            arrayInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    handleSort();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
